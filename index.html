@@ -1,0 +1,124 @@
+<doctype HTML>
+    <head>
+        <meta charset="utf-8" >
+
+<style>
+ #original {
+     display: none;
+ }
+
+ .word_with_suggestion_box {
+     display: inline-block;
+ }
+
+ .suggestionblock {
+     font-size: 20%;
+ }
+
+ .suggestionword {
+     color: blue;
+     text-decoration: underline;
+ }
+
+ #editable {
+     font-size: 60px;
+ }
+ 
+</style>
+
+<script>
+ "use strict";
+ function split_text(text) {
+     const result = [];
+     // The js regexp char class \b is not unicode compatible. :-(
+     for (var word of text.split(/\s+/)) {
+         word = word.trim();
+         if (word.length > 0) {
+             if (word.length > 3 && word.substring(word.length - 3) == "...") {
+                 result.push(word.substring(0, word.length - 3));
+                 word = "...";
+             } else if (word.length > 1 && word[word.length - 1] == ".") {
+                 result.push(word.substring(0, word.length - 1));
+                 word = ".";
+             } else if (word.length > 1 && word[word.length - 1] == ",") {
+                 result.push(word.substring(0, word.length - 1));
+                 word = ",";
+             }
+             result.push(word);
+
+         }
+     }
+     return result;
+ }
+
+ function get_suggestions_for_word(word) {
+     if (word == "." || word == "," || word == "...") {
+         return [];
+     }
+     return ["Abc", word + "s", "green"];
+ }
+ 
+ function get_suggestions_for_words(words) {
+     var result = [];
+     for (const word of words) {
+         result.push({"word": word,
+                      "suggestions": get_suggestions_for_word(word)});
+     }
+     return result;
+ }
+
+ function create_suggestion_word_block(suggestion_word) {
+     const suggestion_element = document.createElement("span");
+     suggestion_element.classList.add("suggestionword");
+     suggestion_element.appendChild(
+         document.createTextNode(suggestion_word));
+     return suggestion_element;
+ }
+ function populate_editable(words_with_suggestions) {
+     const target = document.getElementById("editable");
+     for (const word_with_suggestions of words_with_suggestions) {
+         var block = document.createElement("div");
+         block.classList.add("word_with_suggestion_box");
+         block.appendChild(document.createTextNode(
+             word_with_suggestions["word"]));
+//         block.appendChild(document.createElement("br"));
+         const suggestion_block = document.createElement("div");
+         suggestion_block.classList.add("suggestionblock");
+         var suggestions = word_with_suggestions["suggestions"];
+         if (suggestions.length == 0) {
+             suggestions = ["\u200b"] // Zero width space, just to make the block the same height so that the layout doesn't change.
+         }
+         for (const suggestion of suggestions) {
+             const suggestion_element = create_suggestion_word_block(suggestion);
+             suggestion_block.appendChild(suggestion_element);
+            
+             suggestion_block.appendChild(document.createTextNode(" "));
+         }
+         block.appendChild(suggestion_block);
+         target.appendChild(block);
+         target.appendChild(document.createTextNode(" "));
+     }
+ }
+
+ function convert() {
+     const orig_text = document.getElementById("original").textContent;
+     const words = split_text(orig_text);
+     const words_with_suggestions = get_suggestions_for_words(words);
+     populate_editable(words_with_suggestions);
+ }
+
+ document.onload=convert;
+</script>
+
+<body>
+<div id="original">Lite text att
+    testa   saker med. Typ. Räksmörgås. Etc...
+</div>
+<div id="editable">
+    
+</div>
+    
+
+<script>
+ convert();
+</script>
